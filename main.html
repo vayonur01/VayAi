@@ -1,67 +1,71 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gpt Mesajlaşma (API)</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; margin-top: 50px; }
-    #chatContainer { width: 400px; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-    #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px; margin-bottom: 10px; background: #fafafa;}
-    .message { margin: 5px 0; }
-    .user { color: blue; }
-    .bot { color: green; }
-    input { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { padding: 10px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VayAI Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #chat-container { background: #fff; padding: 20px; border-radius: 10px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .message { margin-bottom: 10px; }
+        .user { color: blue; }
+        .gpt { color: green; }
+        input[type="text"] { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-<div id="chatContainer">
+<div id="chat-container">
     <div id="messages"></div>
     <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
     <button onclick="sendMessage()">Gönder</button>
 </div>
 
 <script>
+async function loadAPIKey() {
+    const response = await fetch('vayai.txt'); // VayAI.txt web sunucusunda olmalı
+    const key = await response.text();
+    return key.trim();
+}
+
 async function sendMessage() {
     const input = document.getElementById('userInput');
     const messages = document.getElementById('messages');
-    const userText = input.value.trim();
-    if (!userText) return;
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
 
     // Kullanıcı mesajını ekle
-    const userMessage = document.createElement('div');
-    userMessage.classList.add('message', 'user');
-    userMessage.textContent = "Sen: " + userText;
-    messages.appendChild(userMessage);
-
+    messages.innerHTML += `<div class="message user"><b>Sen:</b> ${userMessage}</div>`;
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 
-    // OpenAI API isteği
-    try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer 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'
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{role: "user", content: userText}]
-            })
-        });
-        const data = await response.json();
-        const botText = data.choices[0].message.content;
+    const apiKey = await loadAPIKey();
 
-        const botMessage = document.createElement('div');
-        botMessage.classList.add('message', 'bot');
-        botMessage.textContent = "Bot: " + botText;
-        messages.appendChild(botMessage);
+    const data = {
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: userMessage }]
+    };
+
+    try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        const gptMessage = result.choices[0].message.content;
+
+        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> ${gptMessage}</div>`;
         messages.scrollTop = messages.scrollHeight;
-    } catch (error) {
-        console.error(error);
+
+    } catch (err) {
+        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> Hata oluştu: ${err}</div>`;
     }
 }
 </script>
