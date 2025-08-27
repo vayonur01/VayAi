@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VayAI 3.5 Chat</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #chat-container { background: #fff; padding: 20px; border-radius: 10px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-        .message { margin-bottom: 10px; }
-        .user { color: blue; }
-        .gpt { color: green; }
-        input[type="text"] { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        button { padding: 10px 15px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VayAI Chatbox</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #chat-container { background: #fff; padding: 20px; border-radius: 10px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .message { margin-bottom: 10px; }
+    .user { color: blue; }
+    .gpt { color: green; }
+    input[type="text"] { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 10px 15px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
+    #api-key { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
+</style>
 </head>
 <body>
 
 <div id="chat-container">
+    <input type="text" id="api-key" placeholder="OpenAI API Key (sk-...)">
     <div id="messages"></div>
     <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
     <button onclick="sendMessage()">Gönder</button>
 </div>
 
 <script>
-async function loadAPIKey() {
-    const response = await fetch('vayai.txt'); // VayAI.txt web sunucusunda olmalı
-    const key = await response.text();
-    return key.trim();
-}
-
 async function sendMessage() {
     const input = document.getElementById('userInput');
     const messages = document.getElementById('messages');
     const userMessage = input.value.trim();
     if (!userMessage) return;
 
-    // Kullanıcı mesajını ekle
     messages.innerHTML += `<div class="message user"><b>Sen:</b> ${userMessage}</div>`;
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 
-    const apiKey = await loadAPIKey();
+    const apiKey = document.getElementById('api-key').value.trim();
+    if (!apiKey) {
+        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> Lütfen API key girin!</div>`;
+        return;
+    }
 
     const data = {
         model: "gpt-3.5-turbo",
@@ -58,10 +57,19 @@ async function sendMessage() {
             body: JSON.stringify(data)
         });
 
-        const result = await response.json();
-        const gptMessage = result.choices[0].message.content;
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> ${gptMessage}</div>`;
+        const result = await response.json();
+
+        if (result.choices && result.choices.length > 0) {
+            const gptMessage = result.choices[0].message?.content || "Cevap boş geldi.";
+            messages.innerHTML += `<div class="message gpt"><b>GPT:</b> ${gptMessage}</div>`;
+        } else {
+            messages.innerHTML += `<div class="message gpt"><b>GPT:</b> API cevabı beklenen formatta değil: ${JSON.stringify(result)}</div>`;
+        }
+
         messages.scrollTop = messages.scrollHeight;
 
     } catch (err) {
