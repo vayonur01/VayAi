@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gpt Mesajlaşma (API)</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; margin-top: 50px; }
+    #chatContainer { width: 400px; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+    #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px; margin-bottom: 10px; background: #fafafa;}
+    .message { margin: 5px 0; }
+    .user { color: blue; }
+    .bot { color: green; }
+    input { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 10px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="chatContainer">
+    <div id="messages"></div>
+    <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+    <button onclick="sendMessage()">Gönder</button>
+</div>
+
+<script>
+async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const messages = document.getElementById('messages');
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    // Kullanıcı mesajını ekle
+    const userMessage = document.createElement('div');
+    userMessage.classList.add('message', 'user');
+    userMessage.textContent = "Sen: " + userText;
+    messages.appendChild(userMessage);
+
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+
+    // OpenAI API isteği
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer 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'
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role: "user", content: userText}]
+            })
+        });
+        const data = await response.json();
+        const botText = data.choices[0].message.content;
+
+        const botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot');
+        botMessage.textContent = "Bot: " + botText;
+        messages.appendChild(botMessage);
+        messages.scrollTop = messages.scrollHeight;
+    } catch (error) {
+        console.error(error);
+    }
+}
+</script>
+
+</body>
+</html>
