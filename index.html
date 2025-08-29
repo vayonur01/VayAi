@@ -2,80 +2,77 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VayAI Chatbox</title>
+<title>Sesli ChatGPT</title>
 <style>
-    body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    #chat-container { background: #fff; padding: 20px; border-radius: 10px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-    .message { margin-bottom: 10px; }
-    .user { color: blue; }
-    .gpt { color: green; }
-    input[type="text"] { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { padding: 10px 15px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
-    #api-key { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    body { font-family: Arial; text-align: center; padding: 50px; background: #f0f0f0; }
+    #chat { width: 60%; margin: auto; background: white; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; }
+    .user { color: blue; margin: 5px 0; }
+    .bot { color: green; margin: 5px 0; }
+    button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
 </style>
 </head>
 <body>
 
-<div id="chat-container">
-    <input type="text" id="api-key" placeholder="OpenAI API Key (sk-...)">
-    <div id="messages"></div>
-    <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
-    <button onclick="sendMessage()">Gönder</button>
-</div>
+<h1>Sesli ChatGPT</h1>
+<div id="chat"></div>
+<button id="start">Konuşmaya Başla</button>
 
 <script>
-async function sendMessage() {
-    const input = document.getElementById('userInput');
-    const messages = document.getElementById('messages');
-    const userMessage = input.value.trim();
-    if (!userMessage) return;
+const chat = document.getElementById('chat');
+const startBtn = document.getElementById('start');
 
-    messages.innerHTML += `<div class="message user"><b>Sen:</b> ${userMessage}</div>`;
-    input.value = '';
-    messages.scrollTop = messages.scrollHeight;
+// Mikrofon ile konuşma
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'tr-TR';
+recognition.interimResults = false;
 
-    const apiKey = document.getElementById('api-key').value.trim();
-    if (!apiKey) {
-        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> Lütfen API key girin!</div>`;
-        return;
-    }
-
-    const data = {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: userMessage }]
-    };
-
-    try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.choices && result.choices.length > 0) {
-            const gptMessage = result.choices[0].message?.content || "Cevap boş geldi.";
-            messages.innerHTML += `<div class="message gpt"><b>GPT:</b> ${gptMessage}</div>`;
-        } else {
-            messages.innerHTML += `<div class="message gpt"><b>GPT:</b> API cevabı beklenen formatta değil: ${JSON.stringify(result)}</div>`;
-        }
-
-        messages.scrollTop = messages.scrollHeight;
-
-    } catch (err) {
-        messages.innerHTML += `<div class="message gpt"><b>GPT:</b> Hata oluştu: ${err}</div>`;
-    }
+// Sesli cevap
+function speak(text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'tr-TR';
+    window.speechSynthesis.speak(utter);
 }
+
+// ChatGPT API çağrısı
+async function sendMessageToChatGPT(message) {
+    const apiKey = "BURAYA_API_KEY"; // Bu alanı kendi API key’inle değiştir
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: message }]
+        })
+    });
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+// Konuşma başlat
+startBtn.onclick = () => recognition.start();
+
+recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript;
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'user';
+    userMsg.textContent = 'Sen: ' + transcript;
+    chat.appendChild(userMsg);
+
+    const reply = await sendMessageToChatGPT(transcript);
+
+    const botMsg = document.createElement('div');
+    botMsg.className = 'bot';
+    botMsg.textContent = 'Bot: ' + reply;
+    chat.appendChild(botMsg);
+
+    speak(reply);
+    chat.scrollTop = chat.scrollHeight;
+};
 </script>
 
 </body>
