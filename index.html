@@ -1,127 +1,186 @@
-<!doctype html>
-<html lang="tr">
+<!DOCTYPE html>
+<html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Website Loader - Tek Dosya</title>
-
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BYLICKILABS</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    html,body { height: 100%; background: #0f172a; color: #0f172a; }
-
-    .loader {
-      position: fixed; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(180deg, rgba(2,6,23,0.95), rgba(6,10,34,0.95));
-      z-index: 9999; transition: opacity 400ms ease, visibility 400ms;
-      visibility: visible; opacity: 1;
+    :root {
+      --primary-color: #3498db;
+      --background-color: #2c3e50;
+      --text-color: #ecf0f1;
+      --button-hover-color: #2980b9;
+      --spinner-color: #e74c3c;
     }
-    .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loader-inner { text-align: center; color: #e6eef8; }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .background {
+      background: url(https://i.ibb.co/B6XCw9F/splashscreen.png) no-repeat center center/cover;
+      position: absolute;
+      top: -30px;
+      left: -30px;
+      width: calc(100vw + 60px);
+      height: calc(100vh + 60px);
+      z-index: -1;
+      fill: blue(0);
+    }
+
+    .spinner-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-text {
+      position: absolute;
+      font-size: 2rem;
+      z-index: 2;
+      color: var(--text-color);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      background: -webkit-linear-gradient(var(--primary-color), var(--spinner-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: opacity 0.5s ease;
+    }
+
     .spinner {
-      width: 72px; height: 72px; border-radius: 50%;
-      border: 6px solid rgba(230,238,248,0.12);
-      border-top-color: #60a5fa;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 14px;
-      box-shadow: 0 6px 30px rgba(2,6,23,0.6), inset 0 -6px 20px rgba(255,255,255,0.02);
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top: 3px solid var(--spinner-color);
+      border-radius: 50%;
+      animation: spin 2s linear infinite, rgb-border 5s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { font-size: 14px; opacity: 0.95; letter-spacing: 0.3px; }
-    .hidden { display: none !important; }
 
-    .app {
-      min-height: 100vh;
-      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-      color: #0f172a;
-      padding: 40px 18px;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    .site-header { text-align: center; margin-bottom: 28px; }
-    .site-header h1 { font-size: 28px; margin-bottom: 6px; }
-    .subtitle { color: #334155; }
-    .content { max-width: 900px; margin: 0 auto; display: grid; gap: 18px; grid-template-columns: 1fr; }
-    .card {
-      background: white; padding: 18px; border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+
+    @keyframes rgb-border {
+      0% { border-top-color: #ff0000; }
+      25% { border-top-color: #00ff00; }
+      50% { border-top-color: #0000ff; }
+      75% { border-top-color: #ff00ff; }
+      100% { border-top-color: #ff0000; }
     }
-    .card h2 { margin-bottom: 8px; font-size: 18px; }
-    .card p, .card ol { color: #475569; line-height: 1.5; }
-    button {
-      padding: 10px 14px; border-radius: 8px; border: none;
-      background: #2563eb; color: #fff; cursor: pointer; font-weight: 600;
-      box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+
+    form {
+      z-index: 2;
+      position: absolute;
+      top: 70%;
+      transform: translateY(-50%);
     }
-    button:active { transform: translateY(1px); }
-    .site-footer { text-align: center; margin-top: 28px; color: #64748b; font-size: 13px; }
+
+    #button {
+      background-color: transparent;
+      color: var(--text-color);
+      border: 2px solid;
+      border-radius: 15px;
+      padding: 10px 20px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+      border-image-slice: 1;
+      border-image-source: linear-gradient(270deg, #ff0000, #00ff00, #0000ff, #ff0000);
+      animation: borderAnimation 5s linear infinite;
+    }
+
+    @keyframes borderAnimation {
+      0% { border-image-source: linear-gradient(270deg, #ff0000, #00ff00, #0000ff, #ff0000); }
+      25% { border-image-source: linear-gradient(270deg, #00ff00, #0000ff, #ff0000, #00ff00); }
+      50% { border-image-source: linear-gradient(270deg, #0000ff, #ff0000, #00ff00, #0000ff); }
+      75% { border-image-source: linear-gradient(270deg, #ff0000, #00ff00, #0000ff, #ff0000); }
+      100% { border-image-source: linear-gradient(270deg, #00ff00, #0000ff, #ff0000, #00ff00); }
+    }
+
+    #button:disabled {
+      border-color: grey;
+      color: grey;
+      cursor: not-allowed;
+      transform: scale(0.95);
+    }
+
+    #button:hover:enabled {
+      background-color: var(--button-hover-color);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .loading-text { font-size: 1.5rem; }
+      #button { font-size: 1.2rem; padding: 8px 16px; }
+    }
   </style>
 </head>
 <body>
-  <div id="loader" class="loader">
-    <div class="loader-inner">
-      <div class="spinner"></div>
-      <p class="loader-text">Yükleniyor…</p>
-    </div>
+  <section class="background"></section>
+
+  <div class="spinner-container">
+    <div class="spinner"></div>
+    <div class="loading-text">0%</div>
   </div>
 
-  <div id="app" class="app hidden">
-    <header class="site-header">
-      <h1>Hoşgeldin — Website Loader Demo</h1>
-      <p class="subtitle">Bu içerik loader tamamlandıktan sonra gösterilir.</p>
-    </header>
-
-    <main class="content">
-      <section class="card">
-        <h2>Proje Hakkında</h2>
-        <p>Bu sayfa, basit bir HTML/CSS/JS loader örneğidir.</p>
-      </section>
-
-      <section class="card">
-        <h2>Nasıl çalışır?</h2>
-        <ol>
-          <li>Sayfa açıldığında loader görünür.</li>
-          <li>Tüm kaynaklar hazır olduğunda içerik gösterilir.</li>
-        </ol>
-      </section>
-
-      <section class="card">
-        <h2>Test</h2>
-        <button id="simulateLoadBtn">Yüklemeyi simüle et (2sn)</button>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <small>© 2025 Website Loader</small>
-    </footer>
-  </div>
+  <form action="YOUR_SITE_HERE" method="get">
+    <input type="submit" name="submit" value="" id="button">
+  </form>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const loader = document.getElementById('loader');
-      const app = document.getElementById('app');
-      const simulateBtn = document.getElementById('simulateLoadBtn');
+    const loadText = document.querySelector(".loading-text");
+    const background = document.querySelector(".background");
+    const spinner = document.querySelector(".spinner-container");
 
-      function hideLoader() {
-        loader.classList.add('hidden');
-        app.classList.remove('hidden');
+    let load = 0;
+    let int = setInterval(blurring, 30);
+
+    function blurring() {
+      load++;
+      if (load > 99) {
+        clearInterval(int);
+        spinner.style.display = "none";
       }
+      loadText.innerText = `${load}%`;
+      loadText.style.opacity = scale(load, 0, 100, 1, 0);
+      background.style.filter = `blur(${scale(load, 0, 100, 30, 0)}px)`;
+    }
 
-      window.addEventListener('load', function () {
-        setTimeout(hideLoader, 500);
-      });
+    const scale = (num, in_min, in_max, out_min, out_max) => {
+      return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
+    };
 
-      if (simulateBtn) {
-        simulateBtn.addEventListener('click', function () {
-          loader.classList.remove('hidden');
-          app.classList.add('hidden');
-          setTimeout(hideLoader, 2000);
-        });
+    // Button countdown
+    var buttontext = "ENTER ";
+    var id = "button";
+    var zeit = 5;
+
+    function buttonsperre() {
+      document.getElementById(id).disabled = true;
+      document.getElementById(id).value = buttontext + "(" + zeit + ")";
+      if (zeit > 0) {
+        zeit--;
+        window.setTimeout(buttonsperre, 1000);
+      } else {
+        document.getElementById(id).disabled = false;
+        document.getElementById(id).value = buttontext;
       }
+    }
 
-      setTimeout(function () {
-        if (!app.classList.contains('hidden')) return;
-        hideLoader();
-      }, 8000);
-    });
+    window.onload = buttonsperre;
   </script>
 </body>
 </html>
