@@ -16,37 +16,15 @@
 <div id="box">
   <h3>Chatbot</h3>
   <textarea id="input" placeholder="Mesaj yaz"></textarea>
-  <button id="sendBtn" disabled>API yükleniyor...</button>
+  <button onclick="send()">Gönder</button>
   <div id="chat"></div>
 </div>
 
 <script>
-let OPENAI_API_KEY = "";
-
-// 🔥 api.env DOSYASINDAN KEY OKU
-fetch("api.env?v=" + Date.now())
-  .then(res => {
-    if (!res.ok) throw new Error("api.env okunamadı");
-    return res.text();
-  })
-  .then(key => {
-    OPENAI_API_KEY = key.trim();
-    document.getElementById("sendBtn").disabled = false;
-    document.getElementById("sendBtn").textContent = "Gönder";
-  })
-  .catch(err => {
-    document.getElementById("sendBtn").textContent = "API yüklenemedi";
-    console.error(err);
-  });
-
-document.getElementById("sendBtn").onclick = send;
+// ⚠️ API KEY BURADA (GÜVENSİZ)
+const OPENAI_API_KEY = "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";
 
 async function send() {
-  if (!OPENAI_API_KEY) {
-    alert("API KEY henüz yüklenmedi!");
-    return;
-  }
-
   const input = document.getElementById("input");
   const chat = document.getElementById("chat");
 
